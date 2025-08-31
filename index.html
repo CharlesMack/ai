@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a160b" />
+  <title>P.O.P.S. — AI-Powered Production Demo</title>
+  <meta name="description" content="P.O.P.S. single-page interface with AI integration, draggable panels, and AppDrop catalog." />
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="bg-particles" id="particles"></div>
+  <div class="phone" id="phone">
+    <div class="status">
+      <div class="time" id="time">11:04 PM</div>
+      <div class="mesh" id="mesh">⬡3</div>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+      <div>✨ Edit Mode Active</div>
+      <div>
+        <button class="btn" id="sortAZ">A→Z Sort</button>
+        <button class="btn" id="done">Complete</button>
+      </div>
+    </div>
+
+    <main class="home" id="home">
+      <div class="search-container">
+        <input type="text" id="appSearch" placeholder="Search AppDrops..." aria-label="Search AppDrops">
+        <select id="categoryFilter" aria-label="Filter by category">
+          <option value="all">All Categories</option>
+        </select>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="scroll-indicator" id="scrollIndicator">↓ Scroll to see more AppDrops ↓</div>
+    </main>
+
+    <section class="app-switcher" id="appSwitcher">
+      <div class="app-switcher-head">
+        <div class="app-switcher-title">Open Apps</div>
+        <div class="app-actions">
+          <button class="btn" id="closeSwitcher">Close</button>
+        </div>
+      </div>
+      <div class="app-switcher-body" id="appSwitcherBody">
+        <div class="app-switcher-empty">No apps open. Launch an AppDrop to start.</div>
+      </div>
+    </section>
+
+    <section class="settings-panel" id="settingsPanel">
+      <div class="p-head" onmousedown="startDragPanel(event, this.parentElement)" ontouchstart="startDragPanel(event, this.parentElement)">
+        <div class="app-title">Settings</div>
+        <div class="app-actions">
+          <button class="btn minimize">–</button>
+          <button class="btn new-tab">↗️</button>
+          <button class="btn close">✕</button>
+        </div>
+      </div>
+      <div class="settings-body">
+        <h2>Theme Color</h2>
+        <div class="color-grid" id="colorGrid">
+          <div class="color-swatch" style="background: #00ff7f" data-color="#00ff7f"></div>
+          <div class="color-swatch" style="background: #007bff" data-color="#007bff"></div>
+          <div class="color-swatch" style="background: #ff073a" data-color="#ff073a"></div>
+          <div class="color-swatch" style="background: #6f42c1" data-color="#6f42c1"></div>
+          <div class="color-swatch" style="background: #fd7e14" data-color="#fd7e14"></div>
+          <div class="color-swatch" style="background: #ffc107" data-color="#ffc107"></div>
+          <div class="color-swatch" style="background: #ff85a2" data-color="#ff85a2"></div>
+          <div class="color-swatch" style="background: #20c997" data-color="#20c997"></div>
+        </div>
+        <div class="color-picker-container">
+          <label for="colorPicker">Custom Color</label>
+          <input type="color" id="colorPicker" value="#00ff7f">
+        </div>
+        <button class="reset-button" id="resetColor">Reset to Default</button>
+        <h2>AppDrop Sync</h2>
+        <div class="sync-container">
+          <button class="btn" id="syncAppDrops" disabled>Sync AppDrops</button>
+          <button class="btn" id="cleanAppDrops" disabled>Remove Outdated AppDrops</button>
+          <div class="auto-sync-container">
+            <label for="autoSyncToggle">Auto-Sync on Reconnect</label>
+            <input type="checkbox" id="autoSyncToggle" aria-label="Enable auto-sync on reconnect">
+          </div>
+          <div class="sync-status" id="syncStatus">Checking network...</div>
+          <div class="sync-log" id="syncLog"></div>
+        </div>
+        <h2>Performance</h2>
+        <div class="performance-toggle">
+          <label for="aiPerformanceToggle">Enable AI Features</label>
+          <input type="checkbox" id="aiPerformanceToggle" checked aria-label="Enable AI features">
+        </div>
+        <button class="btn" id="openPerformanceMonitor">View Stats Tree</button>
+      </div>
+    </section>
+
+    <footer class="dock">
+      <div class="d" title="Home" id="homeBtn">🏠</div>
+      <div class="d" title="Communications" id="phoneBtn">📞</div>
+      <div class="d" title="App Switcher" id="appSwitcherBtn">📱</div>
+      <div class="d" title="Settings" id="settingsBtn">⚙️<span class="badge" id="syncBadge" style="display: none;">0</span></div>
+    </footer>
+  </div>
+
+  <script type="module" src="ppm.js"></script>
+</body>
+</html>
