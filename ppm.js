@@ -598,4 +598,202 @@ function startDragPanel(e, panel) {
   e.preventDefault();
   const isTouchEvent = e.type === 'touchstart';
   const rect = panel.getBoundingClientRect();
-  const offsetX = isTouchEvent ? e.touches[0].clientX -
+  const offsetX = isTouchEvent ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+  const offsetY = isTouchEvent ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+  function movePanel(e) {
+    e.preventDefault();
+    const clientX = isTouchEvent ? e.touches[0].clientX : e.clientX;
+    const clientY = isTouchEvent ? e.touches[0].clientY : e.clientY;
+    panel.style.left = `${clientX - offsetX}px`;
+    panel.style.top = `${clientY - offsetY}px`;
+  }
+
+  function endDragPanel() {
+    document.removeEventListener(isTouchEvent ? 'touchmove' : 'mousemove', movePanel);
+    document.removeEventListener(isTouchEvent ? 'touchend' : 'mouseup', endDragPanel);
+  }
+
+  document.addEventListener(isTouchEvent ? 'touchmove' : 'mousemove', movePanel, { passive: false });
+  document.addEventListener(isTouchEvent ? 'touchend' : 'mouseup', endDragPanel);
+}
+
+function startResizePanel(e, panel) {
+  e.preventDefault();
+  const isTouchEvent = e.type === 'touchstart';
+  const minWidth = 200;
+  const minHeight = 200;
+
+  function resizePanel(e) {
+    e.preventDefault();
+    const clientX = isTouchEvent ? e.touches[0].clientX : e.clientX;
+    const clientY = isTouchEvent ? e.touches[0].clientY : e.clientY;
+    const rect = panel.getBoundingClientRect();
+    const newWidth = Math.max(minWidth, clientX - rect.left);
+    const newHeight = Math.max(minHeight, clientY - rect.top);
+    panel.style.width = `${newWidth}px`;
+    panel.style.height = `${newHeight}px`;
+  }
+
+  function endResizePanel() {
+    document.removeEventListener(isTouchEvent ? 'touchmove' : 'mousemove', resizePanel);
+    document.removeEventListener(isTouchEvent ? 'touchend' : 'mouseup', endResizePanel);
+  }
+
+  document.addEventListener(isTouchEvent ? 'touchmove' : 'mousemove', resizePanel, { passive: false });
+  document.addEventListener(isTouchEvent ? 'touchend' : 'mouseup', endResizePanel);
+}
+
+function updateAppSwitcher() {
+  appSwitcherBody.innerHTML = openApps.length === 0
+    ? '<div class="app-switcher-empty">No apps open. Launch an AppDrop to start.</div>'
+    : openApps.map(app => `
+        <div class="app-switcher-tile" data-id="${app.id}">
+          <div class="icon">${app.emoji}</div>
+          <div class="name">${app.name}</div>
+          <button class="close-btn">✕</button>
+        </div>
+      `).join('');
+
+  appSwitcherBody.querySelectorAll('.app-switcher-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const panel = document.querySelector(`.panel[data-id="${tile.dataset.id}"]`);
+      if (panel) {
+        panel.style.zIndex = ++highestZ;
+        panel.classList.add('active');
+        appSwitcher.classList.remove('show');
+      }
+    });
+
+    tile.querySelector('.close-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const panel = document.querySelector(`.panel[data-id="${tile.dataset.id}"]`);
+      if (panel) {
+        phone.removeChild(panel);
+        openApps = openApps.filter(a => a.id !== tile.dataset.id);
+        updateAppSwitcher();
+        if (navigator.vibrate) navigator.vibrate(50);
+      }
+    });
+  });
+}
+
+function checkScrollIndicator() {
+  const isOverflowing = grid.scrollHeight > grid.clientHeight;
+  scrollIndicator.classList.toggle('show', isOverflowing);
+}
+
+homeBtn.addEventListener('click', () => {
+  document.querySelectorAll('.panel, .settings-panel, .app-switcher').forEach(el => el.classList.remove('active'));
+  home.classList.add('active');
+  if (navigator.vibrate) navigator.vibrate(50);
+});
+
+appSwitcherBtn.addEventListener('click', () => {
+  appSwitcher.classList.toggle('show');
+  document.querySelectorAll('.panel, .settings-panel').forEach(el => el.classList.remove('active'));
+  if (navigator.vibrate) navigator.vibrate(50);
+});
+
+closeSwitcher.addEventListener('click', () => {
+  appSwitcher.classList.remove('show');
+  if (navigator.vibrate) navigator.vibrate(50);
+});
+
+settingsBtn.addEventListener('click', () => {
+  settingsPanel.classList.toggle('active');
+  document.querySelectorAll('.panel, .app-switcher').forEach(el => el.classList.remove('active'));
+  if (navigator.vibrate) navigator.vibrate(50);
+});
+
+settingsPanel.querySelector('.close').addEventListener('click', () => {
+  settingsPanel.classList.remove('active');
+  if (navigator.vibrate) navigator.vibrate(50);
+});
+
+settingsPanel.querySelector('.minimize').addEventListener('click', () => {
+  settingsPanel.classList.remove('active');
+  if (navigator.vibrate) navigator.vibrate(50);
+});
+
+document.getElementById('colorGrid').querySelectorAll('.color-swatch').forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    updateThemeColor(swatch.dataset.color);
+    colorPicker.value = swatch.dataset.color;
+  });
+});
+
+colorPicker.addEventListener('change', () => {
+  updateThemeColor(colorPicker.value);
+});
+
+resetColorBtn.addEventListener('click', resetToDefaultColor);
+
+autoSyncToggle.checked = autoSyncEnabled;
+autoSyncToggle.addEventListener('change', () => {
+  autoSyncEnabled = autoSyncToggle.checked;
+  localStorage.setItem('autoSync', autoSyncEnabled);
+  logSync(`Auto-sync ${autoSyncEnabled ? 'enabled' : 'disabled'}.`);
+});
+
+aiPerformanceToggle.checked = aiFeaturesEnabled;
+aiPerformanceToggle.addEventListener('change', () => {
+  aiFeaturesEnabled = aiPerformanceToggle.checked;
+  localStorage.setItem('aiFeatures', aiFeaturesEnabled);
+  logSync(`AI features ${aiFeaturesEnabled ? 'enabled' : 'disabled'}.`);
+  renderTiles(); // Re-render to update AI app availability if needed
+});
+
+syncAppDropsBtn.addEventListener('click', syncAppDrops);
+cleanAppDropsBtn.addEventListener('click', cleanAppDrops);
+
+appSearch.addEventListener('input', renderTiles);
+categoryFilter.addEventListener('change', renderTiles);
+
+openPerformanceMonitorBtn.addEventListener('click', () => {
+  const performanceApp = apps.find(app => app.id === 'performance-monitor');
+  if (performanceApp) {
+    openApp(performanceApp);
+    settingsPanel.classList.remove('active');
+  }
+});
+
+window.addEventListener('online', () => {
+  updateNetworkStatus();
+  if (autoSyncEnabled) syncAppDrops();
+});
+window.addEventListener('offline', updateNetworkStatus);
+
+window.addEventListener('resize', () => {
+  createParticles();
+  checkScrollIndicator();
+  document.querySelectorAll('.panel, .settings-panel, .app-switcher').forEach(panel => {
+    const maxWidth = window.innerWidth - parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-left')) - parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-right')) - 24;
+    const maxHeight = window.innerHeight - parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--status-h')) - parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dock-h')) - parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) - 16;
+    panel.style.width = `${Math.min(parseFloat(panel.style.width) || maxWidth, maxWidth)}px`;
+    panel.style.height = `${Math.min(parseFloat(panel.style.height) || maxHeight, maxHeight)}px`;
+  });
+});
+
+document.querySelectorAll('.btn, .tile, .dock .d, .color-swatch').forEach(el => {
+  el.setAttribute('tabindex', '0');
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      el.click();
+    }
+  });
+});
+
+detectLowSpec();
+loadSavedAppDrops();
+loadSavedColor();
+updateNetworkStatus();
+createParticles();
+renderTiles();
+populateCategories();
+checkScrollIndicator();
+
+if (isOnline && autoSyncEnabled) {
+  syncAppDrops();
+}
